@@ -10,6 +10,20 @@ module.exports = defineConfig({
     appleMobileWebAppStatusBarStyle: 'black',
     manifestOptions: {
       background_color: '#ffffff'
-    }
+    },
+    icons: [
+      {
+        "purpose": "maskable",
+        "sizes": "512x512",
+        "src": "img/icons/icon512_maskable.png",
+        "type": "image/png"
+      },
+      {
+        "purpose": "any",
+        "sizes": "512x512",
+        "src": "img/icons/icon512_rounded.png",
+        "type": "image/png"
+      }
+    ],
   }
 })
