@@ -1,21 +1,26 @@
 {
-    "name": "Wand App",
-    "short_name": "WandApp",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#ffffff",
-    "description": "An app with wands and sound effects",
-    "icons": [
-      {
-        "src": "img/icons/android-chrome-192x192.png",
-        "sizes": "192x192",
-        "type": "image/png"
-      },
-      {
-        "src": "img/icons/android-chrome-512x512.png",
-        "sizes": "512x512",
-        "type": "image/png"
-      }
-    ]
-  }
-  
+  "theme_color": "#8936FF",
+  "background_color": "#2EC6FE",
+  "icons": [
+    {
+      "purpose": "maskable",
+      "sizes": "512x512",
+      "src": "icon512_maskable.png",
+      "type": "img/icons/image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "512x512",
+      "src": "img/icons/icon512_rounded.png",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "any",
+  "display": "standalone",
+  "dir": "auto",
+  "lang": "th",
+  "name": "Wand App",
+  "short_name": "wand",
+  "start_url": "https://nattakorns.github.io/wand-app/",
+  "scope": "https://nattakorns.github.io/wand-app/"
+}
