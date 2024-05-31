@@ -1,15 +1,16 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <!-- <img alt="Vue logo" src="./assets/logo.png"> -->
+  <!-- <HelloWorld msg="Welcome to Your Vue.js App"/> -->
+  <CanvasWand/>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
+import CanvasWand from './components/CanvasWand.vue';
+import 'bulma/css/bulma.css';
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    CanvasWand
   }
 }
 </script>
@@ -21,6 +22,6 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  /* margin-top: 60px; */
 }
 </style>

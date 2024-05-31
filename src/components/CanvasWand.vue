@@ -1,12 +1,58 @@
 <template>
-    <div id="app">
-      <input type="file" @change="uploadBackground" />
-      <div>
-        <button v-for="(wand, index) in wands" :key="index" @click="selectWand(index)">
-          {{ wand.name }}
-        </button>
+    <div class="container is-fluid">
+      <div ref="cursor" class="custom-cursor" v-if="selectedWand" />
+      <canvas
+        ref="canvas"
+        @click="onClick"
+        @mousemove="handleMouseMove"
+        @mouseleave="hideCursor"
+        @mouseover="showCursor"
+        class="canvas"
+      />
+      <div class="toolbox box">
+        <div class="buttons">
+          <div class="file is-info" style="margin: 0;">
+            <label class="file-label">
+              <input class="file-input" type="file" @change="uploadBackground" />
+              <span class="file-cta">
+                <span class="file-icon">
+                  <i class="fas fa-upload"></i>
+                </span>
+                <span class="file-label">
+                  Upload Background
+                </span>
+              </span>
+            </label>
+          </div>
+          <button class="button is-primary" @click="showWandDialog">
+            Select Wand
+          </button>
+          <button class="button is-info" @click="toggleCamera">
+            Toggle Camera
+          </button>
+        </div>
       </div>
-      <canvas ref="canvas" @mousemove="playSound" />
+  
+      <!-- Modal for Wand Selection -->
+      <div class="modal" :class="{ 'is-active': isWandDialogActive }">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+          <header class="modal-card-head">
+            <p class="modal-card-title">Select Wand</p>
+            <button class="delete" aria-label="close" @click="hideWandDialog"></button>
+          </header>
+          <section class="modal-card-body">
+            <div class="columns is-multiline">
+              <div class="column is-one-quarter" v-for="(wand, index) in wands" :key="index">
+                <button class="button is-fullwidth" @click="selectWand(index)">
+                  <img :src="wand.cursor" alt="Wand Image" style="width: 100px; height: auto;">
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <video ref="video" class="video" autoplay style="display: none;"></video>
     </div>
   </template>
   
@@ -15,21 +61,53 @@
     data() {
       return {
         wands: [
-          { name: "Wand 1", sound: "wand1.wav" },
-          { name: "Wand 2", sound: "wand2.wav" }
+          { name: 'Wand 1', sound: 'wand1.wav', cursor: require('@/assets/wand1.png') },
+          { name: 'Wand 2', sound: 'wand2.wav', cursor: require('@/assets/wand2.png') },
         ],
         selectedWand: null,
-        audio: null
+        audio: null,
+        isCursorVisible: false,
+        isWandDialogActive: false,
+        isCameraActive: false,
       };
     },
     methods: {
       selectWand(index) {
         this.selectedWand = this.wands[index];
         this.audio = new Audio(require(`@/assets/${this.selectedWand.sound}`));
+        this.updateCursor();
+        this.hideWandDialog();
       },
-      playSound() {
+      updateCursor() {
+        const cursor = this.$refs.cursor;
+        if (cursor && this.selectedWand) {
+          cursor.style.backgroundImage = `url(${this.selectedWand.cursor})`;
+          cursor.style.width = '300px';
+          cursor.style.height = '300px';
+        }
+      },
+      handleMouseMove(event) {
+        const cursor = this.$refs.cursor;
+        if (cursor && this.selectedWand) {
+          cursor.style.left = `${event.clientX}px`;
+          cursor.style.top = `${event.clientY}px`;
+        }
+      },
+      onClick() {
         if (this.audio) {
           this.audio.play();
+        }
+      },
+      hideCursor() {
+        const cursor = this.$refs.cursor;
+        if (cursor) {
+          cursor.style.display = 'none';
+        }
+      },
+      showCursor() {
+        const cursor = this.$refs.cursor;
+        if (cursor) {
+          cursor.style.display = 'block';
         }
       },
       uploadBackground(event) {
@@ -40,31 +118,119 @@
           img.src = e.target.result;
           img.onload = () => {
             const canvas = this.$refs.canvas;
-            const ctx = canvas.getContext("2d");
+            const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           };
         };
         reader.readAsDataURL(file);
+      },
+      showWandDialog() {
+        this.isWandDialogActive = true;
+      },
+      hideWandDialog() {
+        this.isWandDialogActive = false;
+      },
+      toggleCamera() {
+        this.isCameraActive = !this.isCameraActive;
+        if (this.isCameraActive) {
+          this.openCamera();
+        } else {
+          this.closeCamera();
+        }
+      },
+      openCamera() {
+        const video = this.$refs.video;
+        video.style.display = 'block';
+        navigator.mediaDevices
+          .getUserMedia({ video: true })
+          .then((stream) => {
+            video.srcObject = stream;
+            video.play();
+            this.captureCameraFrame();
+          })
+          .catch((err) => {
+            console.error("Error accessing camera: ", err);
+          });
+      },
+      closeCamera() {
+        const video = this.$refs.video;
+        const stream = video.srcObject;
+        const tracks = stream.getTracks();
+  
+        tracks.forEach(function (track) {
+          track.stop();
+        });
+  
+        video.srcObject = null;
+        video.style.display = 'none';
+      },
+      captureCameraFrame() {
+        const video = this.$refs.video;
+        const canvas = this.$refs.canvas;
+        const ctx = canvas.getContext('2d');
+        const drawFrame = () => {
+          if (!this.isCameraActive || video.paused || video.ended) return;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          requestAnimationFrame(drawFrame);
+        };
+        drawFrame();
       }
     },
     mounted() {
       const canvas = this.$refs.canvas;
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-    }
+      this.openCamera(); // Open the camera by default
+    },
   };
   </script>
   
   <style>
-  #app {
-    overflow: hidden;
-  }
   canvas {
     position: absolute;
     top: 0;
     left: 0;
+    background-color: aliceblue;
+  }
+  
+  .custom-cursor {
+    z-index: 100;
+    position: absolute;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    background-size: contain;
+    background-repeat: no-repeat;
+    display: none;
+  }
+  
+  .toolbox {
+    position: fixed;
+    bottom: 0;
+    /* width: 100%; */
+    background: #f5f5f5;
+    padding: 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 10;
+  }
+  
+  .modal-card-body {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .modal-card-body .column {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .video {
+    display: none;
   }
   </style>
   
